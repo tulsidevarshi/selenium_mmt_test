@@ -161,4 +161,4 @@ cython_debug/
 
 # Selenium Read Requirements
 # Keep chrome driver inside the chromedriver-mac-arm64 folder
-
+chromedriver-mac-arm64/*
