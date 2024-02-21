@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import requests
 from selenium import webdriver
@@ -6,41 +7,73 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 base_url = "https://www.makemytrip.com/"
+driver = webdriver.Chrome()
+driver.get(base_url)
+print(driver.title)
 
-def wait_for_element(identifier=By.CLASS_NAME, value="primaryBtn", clickable=False, wait_time=120)->int:
+class TypeMismatch(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+def wait_for_element(identifier=By.CLASS_NAME, value="primaryBtn", clickable=[False, False], wait_time=120)->int:
     try:
         element = WebDriverWait(driver, wait_time).until(
-        EC.element_to_be_clickable((By.CLASS_NAME, value))
+        EC.element_to_be_clickable((identifier, value))
     )
         print("Found: "+value)
-        if clickable:
+        if clickable[0]:
             element.click()
+        if clickable[1]:
+            wait = WebDriverWait(driver, wait_time)
+            div_tags = wait.until(EC.presence_of_all_elements_located((identifier, value)))
+            values = []
+            for div_tag in div_tags:
+                values.append([val.strip() for val in re.findall("₹\s*(\d*\,*\d+)", div_tag.text.strip())][0])
+            return values
+
         return 0
     except:
+        print("Error")
         return 1
 
 def click_on_search():
-    wait_for_element(By.CLASS_NAME, "primaryBtn", True, wait_time=60)
+    a = wait_for_element(
+        identifier=By.CLASS_NAME, 
+        value="primaryBtn", clickable=[True, False], wait_time=60)
+    return a
 
 def is_pop_up():
     """
     <span class="bgProperties  overlayCrossIcon icon20" style="background-image: url(&quot;//jsak.mmtcdn.com/flights/assets/media/cross-icon.8b0f8487.png&quot;);"></span>
     """
     # print("Func called")
-    wait_for_element(By.XPATH, "/html/body/div[1]/div/div[2]/div[2]/div[2]/div/div/div[3]/button", True, wait_time=60)
-    # print("Func Exit")
+    return wait_for_element(
+        identifier=By.XPATH, 
+        value='//*[@id="root"]/div/div[2]/div[2]/div[2]/div/span', 
+        clickable=[True, False], 
+        wait_time=60)
+
+def get_all_prices():
+    return wait_for_element(
+        By.CSS_SELECTOR, 
+        '.blackText.fontSize18.blackFont.white-space-no-wrap.clusterViewPrice', 
+        [False, True], 
+        wait_time=60)
 
 def main():
-    driver = webdriver.Chrome()
-    driver.get(base_url)
-    print(driver.title)
-    # time.sleep(20)
     try:
-        click_on_search()
-        time.sleep(10)
-        is_pop_up()
-        time.sleep(60)
-
+        if click_on_search() == 1:
+            return
+        if is_pop_up() == 1:
+            return
+        time.sleep(5)
+        out = get_all_prices()
+        if type(out) is not list:
+            raise TypeMismatch("Expected list got integer")
+        out = [int(re.sub(',','',a.strip())) for a in out if a.strip()!=""]
+        out1 = sorted(out)
+        if out == out1:
+            print("Matched")
     except:
         print("Error Occured")
     finally:
