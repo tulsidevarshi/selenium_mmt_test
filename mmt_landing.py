@@ -60,6 +60,13 @@ def get_all_prices():
         [False, True], 
         wait_time=60)
 
+def is_sorted_list(lsA):
+    for i in range(1, len(lsA)):
+        if lsA[i-1] > lsA[i]:
+            print("List is not sorted here: {}".format(str(lsA[i-1:i])))
+            return False
+    return True
+
 def main():
     try:
         if click_on_search() == 1:
@@ -71,9 +78,10 @@ def main():
         if type(out) is not list:
             raise TypeMismatch("Expected list got integer")
         out = [int(re.sub(',','',a.strip())) for a in out if a.strip()!=""]
-        out1 = sorted(out)
-        if out == out1:
+        if is_sorted_list(out):
             print("Matched")
+        else:
+            print("Not sorted list")
     except:
         print("Error Occured")
     finally:
