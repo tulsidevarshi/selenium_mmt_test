@@ -4,8 +4,12 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service as ChromeServ
+from webdriver_manager.chrome import ChromeDriverManager
+
 base_url = "https://www.makemytrip.com/"
-driver = webdriver.Chrome()
+
+driver = webdriver.Chrome(service=ChromeServ(ChromeDriverManager().install()))
 driver.get(base_url)
 print(driver.title)
 
