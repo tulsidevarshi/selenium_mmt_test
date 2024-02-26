@@ -19,9 +19,9 @@ base_url = "https://www.makemytrip.com/"
 
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--headless=new")
-chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64;  x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
-chrome_options.add_argument("--disable-notifications")
-chrome_options.add_experimental_option("excludeSwitches", ["enable-automation","enable-logging"])
+# chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64;  x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
+# chrome_options.add_argument("--disable-notifications")
+# chrome_options.add_experimental_option("excludeSwitches", ["enable-automation","enable-logging"])
 
 
 driver = webdriver.Chrome(options=chrome_options, service=ChromeServ(ChromeDriverManager().install()))
@@ -37,15 +37,15 @@ class TypeMismatch(Exception):
 
 def wait_for_element(identifier=By.CLASS_NAME, value="primaryBtn", clickable=[False, False], wait_time=120)->int:
     try:
-        while True:
-            driver.execute_script('scrollBy(0,250)')
-            time.sleep(0.5)
-            driver.execute_script('scrollBy(0,500)')
-            time.sleep(0.25)
-            driver.execute_script('scrollBy(0, 200)')
-            time.sleep(0.75)
-            driver.execute_script('scrollBy(0, -950)')
-            break
+        # while True:
+            # driver.execute_script('scrollBy(0,250)')
+            # time.sleep(0.5)
+            # driver.execute_script('scrollBy(0,500)')
+            # time.sleep(0.25)
+            # driver.execute_script('scrollBy(0, 200)')
+            # time.sleep(0.75)
+            # driver.execute_script('scrollBy(0, -950)')
+            # break
         # driver.execute_script('document.getElementsByTagName("html")[0].style.scrollBehavior = "auto"')
         element = WebDriverWait(driver, wait_time).until(
         EC.presence_of_element_located((identifier, value))
@@ -89,14 +89,31 @@ def is_pop_up():
         clickable=[True, False], 
         wait_time=60)
 
+def scroll_till_bottom():
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    
+    while True:
+
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        time.sleep(4)
+
+        curr_ht = driver.execute_script("return document.body.scrollHeight")
+        if curr_ht == last_height:
+            break
+        last_height = curr_ht
+
+
 def get_all_prices():
+    scroll_till_bottom()
     return wait_for_element(
-        By.CSS_SELECTOR, 
-        '.blackText.fontSize18.blackFont.white-space-no-wrap.clusterViewPrice', 
+        By.XPATH, 
+        "//div[@class='blackText fontSize18 blackFont white-space-no-wrap clusterViewPrice']", 
         [False, True], 
         wait_time=60)
 
 def is_sorted_list(lsA):
+    print(len(lsA))
     for i in range(1, len(lsA)):
         if lsA[i-1] > lsA[i]:
             print("List is not sorted here: {}".format(str(lsA[i-1:i])))
