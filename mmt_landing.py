@@ -20,10 +20,9 @@ base_url = "https://www.makemytrip.com/"
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64;  x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-notifications")
 chrome_options.add_experimental_option("excludeSwitches", ["enable-automation","enable-logging"])
-chrome_options.add_experimental_option('useAutomationExtension', False)
+
 
 driver = webdriver.Chrome(options=chrome_options, service=ChromeServ(ChromeDriverManager().install()))
 driver.maximize_window()
