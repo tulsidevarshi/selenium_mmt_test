@@ -1,5 +1,7 @@
 import re
+import os
 import time
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -7,11 +9,28 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service as ChromeServ
 from webdriver_manager.chrome import ChromeDriverManager
 
+"""
+In Future the script will be converted to POM arrangement
+If script does not work. comment out the headless command -> few things is
+In case of any error a screenshot of the error page will be taken for your display
+"""
+
 base_url = "https://www.makemytrip.com/"
 
-driver = webdriver.Chrome(service=ChromeServ(ChromeDriverManager().install()))
+chrome_options = webdriver.ChromeOptions()
+# chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64;  x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_experimental_option("excludeSwitches", ["enable-automation","enable-logging"])
+chrome_options.add_experimental_option('useAutomationExtension', False)
+
+driver = webdriver.Chrome(options=chrome_options, service=ChromeServ(ChromeDriverManager().install()))
+driver.maximize_window()
 driver.get(base_url)
-print(driver.title)
+title_val = driver.title
+print(title_val)
+# print(driver)
 
 class TypeMismatch(Exception):
     def __init__(self, *args: object) -> None:
@@ -19,10 +38,22 @@ class TypeMismatch(Exception):
 
 def wait_for_element(identifier=By.CLASS_NAME, value="primaryBtn", clickable=[False, False], wait_time=120)->int:
     try:
+        while True:
+            driver.execute_script('scrollBy(0,250)')
+            time.sleep(0.5)
+            driver.execute_script('scrollBy(0,500)')
+            time.sleep(0.25)
+            driver.execute_script('scrollBy(0, 200)')
+            time.sleep(0.75)
+            driver.execute_script('scrollBy(0, -950)')
+            break
+        # driver.execute_script('document.getElementsByTagName("html")[0].style.scrollBehavior = "auto"')
         element = WebDriverWait(driver, wait_time).until(
-        EC.element_to_be_clickable((identifier, value))
+        EC.presence_of_element_located((identifier, value))
     )
         print("Found: "+value)
+        element.find_element(by=identifier, value=value)
+        time.sleep(4)
         if clickable[0]:
             element.click()
         if clickable[1]:
@@ -30,18 +61,22 @@ def wait_for_element(identifier=By.CLASS_NAME, value="primaryBtn", clickable=[Fa
             div_tags = wait.until(EC.presence_of_all_elements_located((identifier, value)))
             values = []
             for div_tag in div_tags:
-                values.append([val.strip() for val in re.findall("₹\s*(\d*\,*\d+)", div_tag.text.strip())][0])
+                values.append([val.strip() for val in re.findall("₹\s+(\d*\,*\d*)", div_tag.text.strip())][0])
             return values
 
         return 0
     except:
-        print("Error")
-        return 1
+        print(f"Error. Not Found: {value}")
+        cwd = os.getcwd()
+        curr_tm = "error"+str(datetime.now().strftime("%Y-%m-%d_%H:%M:%S"))+".png"
+        file_screen = os.path.join(cwd,"log", curr_tm)
+        driver.save_screenshot(file_screen)
+        return 0
 
 def click_on_search():
     a = wait_for_element(
-        identifier=By.CLASS_NAME, 
-        value="primaryBtn", clickable=[True, False], wait_time=60)
+        identifier=By.XPATH, 
+        value='//*[@id="top-banner"]/div[2]/div/div/div/div[2]/p/a', clickable=[True, False], wait_time=60)
     return a
 
 def is_pop_up():
@@ -86,8 +121,7 @@ def main():
             print("Not sorted list")
     except:
         print("Error Occured")
-    finally:
-        driver.quit()
 
 if __name__ == '__main__':
     main()
+    driver.quit()
